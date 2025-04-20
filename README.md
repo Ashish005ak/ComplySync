@@ -25,6 +25,11 @@ Notion API – Compliance logging
 Frontend –React+firebase(OAuth)
 
 
+## N8N WorkFlow
+
+![image](https://github.com/user-attachments/assets/fd9eff31-c49d-4c7f-8a43-34ad782667b9)
+
+
 
 # React + Vite
 
