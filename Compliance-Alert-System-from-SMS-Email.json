@@ -1,0 +1,340 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -120
+      ],
+      "id": "07426345-da5b-477a-b753-ff7e0007648b",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6PL9ZCECBRBc6SJj",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const keywords = [\n  \"GST Return Due\",\n  \"ITR filed\",\n  \"PF overdue\",\n  \"GST\",\n  \"ITR\",\n  \"PF\",\n  \"Due\",\n  \"Penalty\"\n];\n\nconst emailSubject =$input.first().json.headers.subject  || \"\";\nconst emailBody = $input.first().json.text || \"\";\n\n// Combine subject and body into one string\nconst emailContent = emailSubject + \" \" + emailBody;\n\nlet keywordFound = false;\n\nfor (const keyword of keywords) {\n  if (emailContent.includes(keyword.toLowerCase())) {\n    keywordFound = true;\n    break;\n  }\n}\n\nreturn [\n  {\n    json: {\n      ...$json,\n      keywordDetected: keywordFound\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        -120
+      ],
+      "id": "2bb26dc9-a98d-4cc1-82b5-f5457d3c386c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87fb44d3-5352-4aaa-9591-3247691296d8",
+              "leftValue": "={{ $json.keywordDetected }}.toString()",
+              "rightValue": "true.toString()",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        -120
+      ],
+      "id": "5292f75f-5872-4e68-b8b3-56186e797e55",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "from": "+14155238886",
+        "to": "+917337071841",
+        "toWhatsapp": true,
+        "message": "=REMAINDER:{{ $json.headers.subject }}\n{{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        660,
+        -120
+      ],
+      "id": "3acae05a-2ee2-4aa1-b557-edc311955985",
+      "name": "Twilio",
+      "credentials": {
+        "twilioApi": {
+          "id": "ucQ9vAqDmsdPGGKa",
+          "name": "VenkateshAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailText = $('If').first().json.text;\n\n// Match due date like \"duedate on April 25, 2025\"\nconst match = emailText.match(/duedate\\s+on\\s+\\*?([A-Za-z]+\\s+\\d{1,2},\\s+\\d{4})\\*?/i);\n\n// Match amount like \"₹10,000\" or \"₹ 1000\"\nconst amountMatch = emailText.match(/₹\\s?([\\d,]+)/);\n\n// Match penalty like \"penalty of ₹200 per day\"\nconst penaltyMatch = emailText.match(/penalty\\s+of\\s+₹\\s?([\\d,]+)\\s+per\\s+day/i);\n\nif (match) {\n  const dateStr = match[1].replace(/\\*/g, ''); // remove * if present\n  const parsedDate = new Date(dateStr);\n  const isoDate = parsedDate.toISOString().split('T')[0];\n\n  const result = {\n    dueDate: isoDate,\n    summary: \"Compliance Alert: PF Contribution Due\",\n    description: emailText,\n    amount: amountMatch ? amountMatch[1].replace(/,/g, '') : undefined,\n    penaltyPerDay: penaltyMatch\n      ? penaltyMatch[1].replace(/,/g, '')\n      : \"-\",\n  };\n\n  return [{ json: result }];\n} else {\n  throw new Error(\"❗ Due date not found in email body.\");\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -120
+      ],
+      "id": "24b34b32-fe15-4b29-a878-624e067854ac",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "ramkrishnaaa5@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ramkrishnaaa5@gmail.com"
+        },
+        "start": "={{ $json.dueDate }}T11:28:00",
+        "end": "={{ $json.dueDate }}T12:00:00",
+        "useDefaultReminders": false,
+        "additionalFields": {
+          "description": "={{ $json.description }}",
+          "summary": "={{ $json.summary }}"
+        },
+        "remindersUi": {
+          "remindersValues": [
+            {
+              "method": "popup",
+              "minutes": 2880
+            },
+            {
+              "method": "popup",
+              "minutes": 1440
+            },
+            {
+              "method": "popup",
+              "minutes": 60
+            },
+            {
+              "method": "popup",
+              "minutes": 7200
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1100,
+        -120
+      ],
+      "id": "cabd7624-8def-4d7c-b485-2be79b2b5aea",
+      "name": "Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Zm27O0qns3xSrfQ5",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+19342299522",
+        "to": "+917337071841",
+        "message": "=Remainder: {{ $('Code1').item.json.summary }} for more details open Complysync Web\n",
+        "options": {
+          "statusCallback": ""
+        }
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        -120
+      ],
+      "id": "2f382d4f-0933-4da2-a636-e8189c3e2566",
+      "name": "Twilio2",
+      "credentials": {
+        "twilioApi": {
+          "id": "ucQ9vAqDmsdPGGKa",
+          "name": "VenkateshAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "1db84b67-79a5-802c-ad5e-e48725974e63",
+          "mode": "list",
+          "cachedResultName": "Compliance Table",
+          "cachedResultUrl": "https://www.notion.so/1db84b6779a5802cad5ee48725974e63"
+        },
+        "title": "compliance data",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Compliance Type|title",
+              "title": "={{ $('Code1').item.json.summary }}"
+            },
+            {
+              "key": "Due Date|rich_text",
+              "textContent": "={{ $('Code1').item.json.dueDate }}"
+            },
+            {
+              "key": "Amount|rich_text",
+              "textContent": "={{ $('Code1').item.json.amount }}"
+            },
+            {
+              "key": "Status|status",
+              "statusValue": "Not paid"
+            },
+            {
+              "key": "Source|rich_text",
+              "textContent": "Email"
+            },
+            {
+              "key": "Penalty|rich_text",
+              "textContent": "={{ $('Code1').item.json.penaltyPerDay }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        -120
+      ],
+      "id": "de760369-65b4-41b5-8831-6c1181f65968",
+      "name": "Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "umdPh8q2RKZD28sE",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Twilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "main": [
+        [
+          {
+            "node": "Twilio2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio2": {
+      "main": [
+        [
+          {
+            "node": "Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f003c646-d958-44ba-a89b-6ff782477043",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cee387102a7ecf97412981ac4aa04275cb8c6b13fd294435557d481e6fa1192a"
+  },
+  "id": "ew6qCb7mk1NTq2AS",
+  "tags": []
+}
