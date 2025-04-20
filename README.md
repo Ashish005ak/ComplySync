@@ -1,3 +1,20 @@
+# 🛡️ Compliance Alert System from Gmail & SMS
+
+A Python-based automation system that reads emails, detects compliance-related alerts (like GST, ITR, PF), extracts due dates and amounts, and creates calendar reminders, sends WhatsApp/voice alerts, and logs to Notion.
+
+---
+
+## 🚀 Features
+
+- ✅ Polls Gmail for compliance-related emails
+- 🔍 Detects keywords like GST, PF, ITR, Penalty, etc.
+- 🧠 Extracts due date, amount, and penalty using regex
+- 📅 Creates Google Calendar events with multiple reminders
+- 💬 Sends WhatsApp & voice alerts via Twilio
+- 📝 Logs details into a Notion database
+- 🔁 Can be scheduled to run periodically (cron/APScheduler)
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -10,3 +27,5 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
