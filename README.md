@@ -1,6 +1,6 @@
 # 🛡️ Compliance Alert System from Gmail & SMS
 
-A Python-based automation system that reads emails, detects compliance-related alerts (like GST, ITR, PF), extracts due dates and amounts, and creates calendar reminders, sends WhatsApp/voice alerts, and logs to Notion.
+A automation system that reads emails, detects compliance-related alerts (like GST, ITR, PF), extracts due dates and amounts, and creates calendar reminders, sends WhatsApp/voice alerts, and logs to Notion.
 
 ---
 
@@ -14,6 +14,16 @@ A Python-based automation system that reads emails, detects compliance-related a
 - 📝 Logs details into a Notion database
 - 🔁 Can be scheduled to run periodically (cron/APScheduler)
 
+## 🧰 Tech Stack
+
+Automation Platform – We used “n8n”
+Gmail Trigger – Email source
+Custom Code Modules –  Regex logic
+Twilio – SMS + Voice Call alerts
+Google Calendar API – Event creation
+Notion API – Compliance logging
+Frontend –React+firebase(OAuth)
+![image](https://github.com/user-attachments/assets/a2123f46-1d35-4317-a911-83ebcdf85201)
 
 # React + Vite
 
